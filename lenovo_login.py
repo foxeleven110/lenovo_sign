@@ -1,4 +1,4 @@
-#!C:\python\python.exe
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import requests
 import http.cookiejar as cookielib
