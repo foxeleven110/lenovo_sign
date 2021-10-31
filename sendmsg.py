@@ -3,7 +3,7 @@
 import requests
 import json
 def pushplus(title, content):
-    token = "9e0588f54a7645f1aade6f627e9b455e"
+    token = "  "
     url = 'http://www.pushplus.plus/send'
     data = {
         "token":token,
