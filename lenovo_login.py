@@ -4,76 +4,37 @@ import requests
 import http.cookiejar as cookielib
 from pathlib import Path
 import ast
+from lib import sendmsg
 #初始化 
 _session = requests.session()
 _session.cookies = cookielib.LWPCookieJar()
-header1 = {
-    "Host": "mclub.lenovo.com.cn",
-    "Origin": "https://mclub.lenovo.com.cn",
-    "Connection": "keep-alive",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": "https://club.lenovo.com.cn/sign",
-    "User-Agent": "Chrome/95.0.4638.54 Safari/537.36 Mozilla/5.0 ",
-    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "zh-CN,zh;q=0.9",
-}
 ####读取文件路的Cookies#######
 def read_cook():
     print("读取存放文件中的COOKIES")
     with open('cookies.txt', 'r') as f:
         cook_r = str(f.read())
     return cook_r
-####定义头部函数####
-def init_header(host, origin, refer, cook):
-    header = {
-     	"Host": host,
-    	"origin": origin,
-    	"Cookie": cook,
-    	"Connection": "keep-alive",
-    	"Accept-Encoding": "gzip, deflate, br",
-    	"Accept-Language": 'zh-CN,zh;q=0.9',
-    	'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    	'Connection': 'keep-alive',
-    	"referer": refer,
-    	'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,     like Gecko) Chrome/86.0.4240.198 Safari/537.36",
-    	"Accept": "text/html,application/xml;q=0.9, text/javascript, */*; q=0.01",
-    }
-    return header
-
-
-
 
 ############登录加载############
-header = {
-        "Host": "reg.lenovo.com.cn",
-        "origin": "https://reg.lenovo.com.cn",
-        "Connection": "keep-alive",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": 'zh-CN,zh;q=0.9',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Connection': 'keep-alive',
-        'Cookie': 'sce=1; leid=1.xRPvBztGrts; LA_F_T_10000001=1634986394958; LA_C_Id=_ck21102318531419623772717075232; LA_R_T_10000001=1634986394958; LA_V_T_10000001=1634986394958; LA_M_W_10000001=_ck21102318531419623772717075232%7C10000001%7C%7C%7C; LA_C_C_Id=_sk202110231853160.62828300.9085; _ga=GA1.3.1325283140.1634986395; _gid=GA1.3.1891062882.1634986395; JSESSIONID=F4E731F857E83F5BAABD844714406BEC; qrtoken=l1984-6902c4c5-415f-4717-97af-d8771cdc1db0',
-        "referer": "https://reg.lenovo.com.cn/auth/v1/login",
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,     like Gecko) Chrome/86.0.4240.198 Safari/537.36",
-        "Accept": "application/json, text/javascript, */*; q=0.01","Host": "reg.lenovo.com.cn",
-        "Connection": "keep-alive",
-        'sec-ch-ua': '"Google Chrome";v="95", "Chromium";v="95", ";Not A Brand";v="99"',
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": 'zh-CN,zh;q=0.9',
-        'Connection': 'keep-alive',
-        'User-Agent': ": Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36",
-        "Accept": "text/html,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    }
+
 
 def login():
     login_url = "https://reg.lenovo.com.cn/auth/v2/doLogin"
-    
+    header = {
+        "Host": "reg.lenovo.com.cn",
+        "origin": "https://reg.lenovo.com.cn",
+        "Connection": "keep-alive",
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        "referer": "https://reg.lenovo.com.cn/auth/v1/login",
+        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,     like Gecko) Chrome/86.0.4240.198 Safari/537.36",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Encoding": "gzip, deflate, br",
+        'Cookie': 'leid=自己的ID;  qrtoken=自己的token',
+    }
     
     post_data = {
-    	"account": '用户名', #修改成自己的
-    	"password": '密码密文',#修改成自己的
+    	"account": '自己的用户名',
+    	"password": '自己的用户密码',
     	"ps": "1",
     	'codeid': None,
         'code': None,
@@ -121,7 +82,37 @@ def sign(token):
     repon.close()
     cook_r = read_cook()
     sign_list(cook_r)
+####显示签到结果####
+def msg(header, tt):
 
+    _day = tt.find("continuity_day")
+    _da1 = _day+18
+    _da2 = _da1+3
+    msg_days = tt[_da1:_da2]
+    if '"'  in msg_days:
+        _da2 = _da1+2
+        msg_days = tt[_da1:_da2]
+    ######以上加载签到连续天数#######
+
+    repon = _session.get(url="https://mclub.lenovo.com.cn/signuserinfo", headers=header)
+    value = {
+        "ledou": repon.json()["ledou"],
+        "coin": repon.json()["userCoins"],
+        "days": msg_days
+    } 
+    repon.close()
+    title = "联想延保签到结果"
+    content = '''    你已经连续签到%(days)s天
+    当前你的乐豆 %(ledou)s 
+    当前你的积分 %(coin)s
+    
+    ¯¯¯¯¯¯¯¯¯^-^¯¯¯¯¯¯¯¯¯
+    ''' 
+    
+    content = (content % value)
+    print(content)
+    #sendmsg.pushplus(title, content)
+###************####
 def sign_list(cook_fir):
     list_url = "https://mclub.lenovo.com.cn/signlist"
     header = {
@@ -143,20 +134,15 @@ def sign_list(cook_fir):
     n2 = n1+40
 
     token = tt[n1:n2]
-    print(token)
-    print(len(token))
-    #sign_data = {
-    #    "_token": token,
-    #    "memberSource": "0"
-    #}
-    
+    #print("token:",token)
     
     if "立即签到" in tt:
         print("可以签到")
         sign(token)
     else:
         if "签到成功" in tt:
-            print("已经签到")
+            print("  你的签到结果为:")
+            msg(header,tt)
         else:
             print("未登录,尝试重新登录")
             return "1"
